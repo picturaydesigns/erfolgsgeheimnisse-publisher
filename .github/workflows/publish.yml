@@ -1,0 +1,26 @@
+name: publish
+
+# Cloud-Zeitplan: prueft alle 30 Min die Airtable-Queue und postet faellige Reels.
+# PC muss NICHT laufen. Manuell testbar ueber "Run workflow".
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python poster.py
+        env:
+          AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
+          AIRTABLE_QUEUE_TABLE: ${{ secrets.AIRTABLE_QUEUE_TABLE }}
+          AIRTABLE_TOKEN: ${{ secrets.AIRTABLE_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          # Phase 2/3: YT_* / TIKTOK_* Secrets hier ergaenzen
