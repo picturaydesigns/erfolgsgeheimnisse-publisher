@@ -1,5 +1,6 @@
 name: publish
 
+# (Neu-Registrierung erzwungen)
 # Cloud-Zeitplan: prueft alle 30 Min die Airtable-Queue und postet faellige Reels.
 # PC muss NICHT laufen. Manuell testbar ueber "Run workflow".
 on:
