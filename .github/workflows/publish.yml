@@ -5,7 +5,10 @@ name: publish
 # PC muss NICHT laufen. Manuell testbar ueber "Run workflow".
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    # NICHT :00/:30 nehmen - dann ist GitHub-Last am hoechsten und Laeufe werden verworfen.
+    # Versetzte Minuten (:09 / :39) = deutlich zuverlaessiger. GitHub-Cron bleibt aber "best effort"
+    # (kann 5-15 Min spaeter feuern) -> als Postzeit immer einen ~15-Min-Puffer einplanen.
+    - cron: "9,39 * * * *"
   workflow_dispatch: {}
 
 jobs:
