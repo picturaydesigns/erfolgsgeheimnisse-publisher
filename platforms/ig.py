@@ -51,6 +51,20 @@ def publish(video_url, caption, ig_user_id, access_token,
     return p["id"]
 
 
+def token_ok(ig_user_id, access_token):
+    """Read-only Health-Check: prueft ob der Token gueltig ist (postet NICHTS).
+    Gibt (True, info-dict) bei gueltigem Token, sonst (False, fehler-dict/str)."""
+    try:
+        r = requests.get(f"{API}/{ig_user_id}", params={
+            "fields": "username,followers_count", "access_token": access_token
+        }, timeout=30).json()
+    except Exception as e:
+        return False, str(e)
+    if "username" in r:
+        return True, r
+    return False, r
+
+
 def refresh_long_lived_token(access_token):
     """Verlaengert den Long-Lived-Token (alle ~60 Tage noetig). Gibt das JSON zurueck
     (access_token, token_type, expires_in). Der neue Token muss persistiert werden."""

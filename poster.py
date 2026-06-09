@@ -87,7 +87,23 @@ def post_one(rec):
     print(f"#{f.get('reel_id')} -> ok={list(results)} fehler={list(errors)}")
 
 
+def token_check():
+    """Read-only: zeigt in JEDEM Lauf klar, ob der IG-Token lebt (postet nichts)."""
+    print("---------------- TOKEN-CHECK ----------------")
+    if not (IG_USER and IG_TOKEN):
+        print("  uebersprungen: IG_USER_ID / IG_ACCESS_TOKEN nicht gesetzt.")
+        return
+    ok, info = ig.token_ok(IG_USER, IG_TOKEN)
+    if ok:
+        print(f"  TOKEN OK  -> @{info.get('username')} ({info.get('followers_count')} Follower)")
+    else:
+        print(f"  TOKEN TOT -> Instagram lehnt ab: {info}")
+        print("  -> Neuen Token holen + GitHub-Secret IG_ACCESS_TOKEN aktualisieren.")
+    print("---------------------------------------------")
+
+
 def main():
+    token_check()
     recs = due_records()
     print(f"{len(recs)} faellige Eintraege.")
     for rec in recs:
