@@ -67,7 +67,11 @@ def post_one(rec):
     for p in platforms:
         try:
             if p == "instagram":
-                results["instagram"] = ig.publish(f["video_url"], f.get("caption_ig", ""), IG_USER, IG_TOKEN)
+                if (f.get("media_type") or "reel").lower() == "carousel":
+                    urls = [u.strip() for u in (f.get("image_urls") or "").split(",") if u.strip()]
+                    results["instagram"] = ig.publish_carousel(urls, f.get("caption_ig", ""), IG_USER, IG_TOKEN)
+                else:
+                    results["instagram"] = ig.publish(f["video_url"], f.get("caption_ig", ""), IG_USER, IG_TOKEN)
             elif p == "youtube":
                 from platforms import youtube
                 results["youtube"] = youtube.publish(f["video_url"], f.get("yt_title", ""), f.get("yt_description", ""), [], None)

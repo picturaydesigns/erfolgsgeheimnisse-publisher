@@ -51,6 +51,34 @@ def publish(video_url, caption, ig_user_id, access_token,
     return p["id"]
 
 
+def publish_carousel(image_urls, caption, ig_user_id, access_token, poll_every=4):
+    """Postet ein Bild-Karussell (>=2 Bilder). image_urls = Liste oeffentlicher Bild-URLs.
+    Schritt: je Bild ein Child-Container -> CAROUSEL-Container -> media_publish."""
+    if len(image_urls) < 2:
+        raise RuntimeError("Karussell braucht mindestens 2 Bilder")
+    child_ids = []
+    for url in image_urls:
+        r = requests.post(f"{API}/{ig_user_id}/media", data={
+            "image_url": url, "is_carousel_item": "true", "access_token": access_token,
+        }, timeout=60).json()
+        if "id" not in r:
+            raise RuntimeError(f"IG Child-Container-Fehler: {r}")
+        child_ids.append(r["id"])
+    c = requests.post(f"{API}/{ig_user_id}/media", data={
+        "media_type": "CAROUSEL", "children": ",".join(child_ids),
+        "caption": caption, "access_token": access_token,
+    }, timeout=60).json()
+    if "id" not in c:
+        raise RuntimeError(f"IG Carousel-Container-Fehler: {c}")
+    time.sleep(poll_every)
+    p = requests.post(f"{API}/{ig_user_id}/media_publish", data={
+        "creation_id": c["id"], "access_token": access_token,
+    }, timeout=60).json()
+    if "id" not in p:
+        raise RuntimeError(f"IG Carousel-Publish-Fehler: {p}")
+    return p["id"]
+
+
 def token_ok(ig_user_id, access_token):
     """Read-only Health-Check: prueft ob der Token gueltig ist (postet NICHTS).
     Gibt (True, info-dict) bei gueltigem Token, sonst (False, fehler-dict/str)."""
