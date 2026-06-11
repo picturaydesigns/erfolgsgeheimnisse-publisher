@@ -13,8 +13,10 @@ import requests
 from platforms.uploadpost import API, check, headers
 
 
-def publish(video_url, title, description, api_key, profile, ai_generated=True, tags=None):
-    """Short posten. video_url = oeffentliche Cloudinary-URL (wird durchgereicht)."""
+def publish(video_url, title, description, api_key, profile, ai_generated=True, tags=None,
+            lang="de", audio_lang="de-DE"):
+    """Short posten. video_url = oeffentliche Cloudinary-URL (wird durchgereicht).
+    lang/audio_lang: BCP-47 (englische Marken: lang="en", audio_lang="en-US")."""
     data = {
         "user": profile,
         "platform[]": "youtube",
@@ -24,8 +26,8 @@ def publish(video_url, title, description, api_key, profile, ai_generated=True, 
         "youtube_description": (description or "")[:5000],
         "selfDeclaredMadeForKids": "false",
         "containsSyntheticMedia": "true" if ai_generated else "false",
-        "defaultLanguage": "de",
-        "defaultAudioLanguage": "de-DE",
+        "defaultLanguage": lang,
+        "defaultAudioLanguage": audio_lang,
     }
     if tags:
         data["tags[]"] = tags
