@@ -97,6 +97,16 @@ def post_one(rec):
         except Exception as e:  # eine Plattform darf die anderen nicht blockieren
             errors[p] = str(e)
 
+    # Voruebergehende Plattform-Drosselungen (z.B. TikTok-Tages-Kontingent der upload-post-App):
+    # Eintrag auf "scheduled" lassen -> der naechste Cron-Lauf (~20 Min) versucht es erneut.
+    TRANSIENT = ("temporary restriction", "user cap", "try again in a few hours", "rate limit")
+    all_transient = errors and not results and all(
+        any(t in msg.lower() for t in TRANSIENT) for msg in errors.values())
+    if all_transient:
+        update(rec["id"], {"last_error": "RETRY " + "; ".join(f"{k}:{v}" for k, v in errors.items())[:500]})
+        print(f"#{f.get('reel_id')} -> voruebergehend gedrosselt, bleibt scheduled (Retry naechster Lauf)")
+        return
+
     fields = {
         "status": "posted" if results and not errors else ("failed" if errors and not results else "partial"),
         "permalinks": "; ".join(f"{k}:{v}" for k, v in results.items()),

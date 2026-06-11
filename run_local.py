@@ -15,5 +15,12 @@ os.environ["AIRTABLE_TOKEN"]      = at["token"]
 os.environ["IG_USER_ID"]          = ig["instagram_user_id"]
 os.environ["IG_ACCESS_TOKEN"]     = ig["access_token"]
 
+# upload-post (TikTok + YouTube) aus der Publisher-Config
+HERE = os.path.dirname(os.path.abspath(__file__))
+up = json.load(open(os.path.join(HERE, "publisher_config.json"), encoding="utf-8")).get("uploadpost", {})
+if up:
+    os.environ["UPLOADPOST_API_KEY"] = up["api_key"]
+    os.environ["UPLOADPOST_PROFILE"] = up["profile"]
+
 import poster  # liest die Env-Variablen beim Import
 poster.main()

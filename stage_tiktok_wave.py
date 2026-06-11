@@ -86,6 +86,8 @@ def main():
     ap.add_argument("--go", action="store_true", help="wirklich ausfuehren (sonst Trockenlauf)")
     ap.add_argument("--items", default="", help="nur diese Nummern, z.B. 1,3,5")
     ap.add_argument("--start", default="", help="erster Posttag YYYY-MM-DD (Standard: morgen)")
+    ap.add_argument("--hour", default=POST_HOUR_UTC, help='Postzeit UTC "HH:MM" (Standard 17:00 = 19:00 lokal)')
+    ap.add_argument("--now", action="store_true", help="sofort faellig statt Zeitplan (Testpost)")
     args = ap.parse_args()
 
     staged = {}
@@ -107,8 +109,9 @@ def main():
     day = start
     print(f"{'AUSFUEHREN' if args.go else 'TROCKENLAUF'} - {len(items)} Stuecke ab {start}:")
     for it in items:
-        when = f"{day.isoformat()} {POST_HOUR_UTC}"
-        local = f"{day.strftime('%d.%m.')} 19:00 lokal"
+        when = "" if args.now else f"{day.isoformat()} {args.hour}"
+        h, m = (int(x) for x in args.hour.split(":"))
+        local = "SOFORT" if args.now else f"{day.strftime('%d.%m.')} {h + 2:02d}:{m:02d} lokal"
         print(f"  {it['nr']:02d} {it['typ']:9s} {it['label']:24s} -> {local} ({len(it['media'])} Datei(en))")
         if args.go:
             kind = "image" if it["typ"] == "Karussell" else "video"
