@@ -11,16 +11,20 @@ API = "https://graph.instagram.com/v22.0"
 
 
 def publish(video_url, caption, ig_user_id, access_token,
-            share_to_feed=True, poll_max=60, poll_every=5):
-    """Postet ein Reel und gibt die Media-ID zurueck. Wirft RuntimeError bei Fehler."""
+            share_to_feed=True, poll_max=60, poll_every=5, cover_url=None):
+    """Postet ein Reel und gibt die Media-ID zurueck. Wirft RuntimeError bei Fehler.
+    cover_url (optional) = oeffentliche Bild-URL fuer ein einheitliches Marken-Cover (Grid-Look)."""
     # 1) REELS-Container anlegen
-    r = requests.post(f"{API}/{ig_user_id}/media", data={
+    data = {
         "media_type": "REELS",
         "video_url": video_url,
         "caption": caption,
         "share_to_feed": "true" if share_to_feed else "false",
         "access_token": access_token,
-    }, timeout=60)
+    }
+    if cover_url:
+        data["cover_url"] = cover_url
+    r = requests.post(f"{API}/{ig_user_id}/media", data=data, timeout=60)
     j = r.json()
     if "id" not in j:
         raise RuntimeError(f"IG Container-Fehler: {j}")

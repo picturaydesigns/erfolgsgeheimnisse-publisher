@@ -25,6 +25,8 @@ AT_TABLE = env("AIRTABLE_QUEUE_TABLE")
 AT_TOKEN = env("AIRTABLE_TOKEN")
 IG_USER = env("IG_USER_ID", required=False)
 IG_TOKEN = env("IG_ACCESS_TOKEN", required=False)
+UP_KEY = env("UPLOADPOST_API_KEY", required=False)      # upload-post.com (TikTok)
+UP_TIKTOK_USER = env("UPLOADPOST_TIKTOK_USER", required=False)
 
 AT_URL = f"https://api.airtable.com/v0/{AT_BASE}/{AT_TABLE}"
 AT_HEADERS = {"Authorization": f"Bearer {AT_TOKEN}", "Content-Type": "application/json"}
@@ -71,13 +73,23 @@ def post_one(rec):
                     urls = [u.strip() for u in (f.get("image_urls") or "").split(",") if u.strip()]
                     results["instagram"] = ig.publish_carousel(urls, f.get("caption_ig", ""), IG_USER, IG_TOKEN)
                 else:
-                    results["instagram"] = ig.publish(f["video_url"], f.get("caption_ig", ""), IG_USER, IG_TOKEN)
+                    results["instagram"] = ig.publish(f["video_url"], f.get("caption_ig", ""), IG_USER, IG_TOKEN,
+                                                       cover_url=(f.get("cover_url") or None))
             elif p == "youtube":
                 from platforms import youtube
                 results["youtube"] = youtube.publish(f["video_url"], f.get("yt_title", ""), f.get("yt_description", ""), [], None)
             elif p == "tiktok":
                 from platforms import tiktok
-                results["tiktok"] = tiktok.publish(f["video_url"], f.get("caption_tiktok", ""), None)
+                if not (UP_KEY and UP_TIKTOK_USER):
+                    raise RuntimeError("UPLOADPOST_API_KEY / UPLOADPOST_TIKTOK_USER nicht gesetzt")
+                ai = bool(f.get("ai_label"))
+                if (f.get("media_type") or "reel").lower() == "carousel":
+                    urls = [u.strip() for u in (f.get("image_urls") or "").split(",") if u.strip()]
+                    results["tiktok"] = tiktok.publish_photos(urls, f.get("caption_tiktok", ""),
+                                                              UP_KEY, UP_TIKTOK_USER, ai_generated=ai)
+                else:
+                    results["tiktok"] = tiktok.publish_video(f["video_url"], f.get("caption_tiktok", ""),
+                                                             UP_KEY, UP_TIKTOK_USER, ai_generated=ai)
         except Exception as e:  # eine Plattform darf die anderen nicht blockieren
             errors[p] = str(e)
 
@@ -103,6 +115,10 @@ def token_check():
     else:
         print(f"  TOKEN TOT -> Instagram lehnt ab: {info}")
         print("  -> Neuen Token holen + GitHub-Secret IG_ACCESS_TOKEN aktualisieren.")
+    if UP_KEY:
+        from platforms import tiktok
+        ok, info = tiktok.token_ok(UP_KEY)
+        print(f"  UPLOAD-POST {'OK' if ok else 'TOT'} -> {str(info)[:120]}")
     print("---------------------------------------------")
 
 
