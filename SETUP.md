@@ -42,11 +42,12 @@ python stage.py --reel 6 --platforms instagram --when "<in ~15 Min, UTC: YYYY-MM
 → Der GitHub-Cron (alle 30 Min) postet es von selbst; Status in der Airtable-Queue wird `posted`.
 Hinweis: Cron kann 5–15 Min später feuern; Zeiten in **UTC** (aktuell = lokale Zeit − 2 Std im Sommer).
 
-## 🔜 Phase 2 — YouTube Shorts (Google)
-1. **console.cloud.google.com** → Projekt anlegen → **YouTube Data API v3** aktivieren.
-2. **OAuth-Zustimmungsbildschirm** einrichten + App **verifizieren/„published"** (wichtig für
-   dauerhafte Tokens — sonst verfallen sie nach 7 Tagen).
-3. OAuth-Client (Desktop) → einmal autorisieren → **Refresh-Token** sichern. Werte gibst du mir.
+## ✅ Phase 2 — YouTube Shorts (über upload-post.com)
+Gleicher Weg wie TikTok — kein Google-Cloud-Projekt, keine OAuth-Verifizierung, keine 6/Tag-Quote.
+1. 🧑 Im upload-post-Profil der Marke zusätzlich das **YouTube-Konto verbinden** (OAuth-Klick).
+2. Fertig — Queue-Zeilen mit `platforms="youtube"` (oder `"instagram,tiktok,youtube"`) postet der
+   Cloud-Runner automatisch als Short (`yt_title` + `yt_description`, KI-Deklaration
+   `containsSyntheticMedia` wird gesetzt).
 
 ## ✅ Phase 3 — TikTok (über upload-post.com)
 Weg: upload-post.com = Posting-Dienst mit bereits auditierter TikTok-App (Video + Foto-Karussell).
@@ -55,7 +56,7 @@ Gratis 10 Uploads/Monat, danach Bezahl-Tarif (~16 $/Monat). Kein eigenes TikTok-
 2. 🧑 Dort ein Profil anlegen und das **TikTok-Konto verbinden** (OAuth-Klick).
 3. 🧑 **API-Key** aus dem Dashboard kopieren → an Claude geben.
 4. 🤖 Key landet in `publisher_config.json` (Block `uploadpost`) + GitHub-Secrets
-   `UPLOADPOST_API_KEY` und `UPLOADPOST_TIKTOK_USER` (= Profilname aus Schritt 2).
+   `UPLOADPOST_API_KEY` und `UPLOADPOST_PROFILE` (= Profilname aus Schritt 2).
 5. Queue-Zeilen mit `platforms="tiktok"` postet der Cloud-Runner dann automatisch
    (Video über `video_url`, Karussell über `media_type=carousel` + `image_urls`).
    Welle einplanen: `python stage_tiktok_wave.py --go`
