@@ -2,8 +2,12 @@
 """Stellt alle geplanten Reels (#7-#28) auf einmal in die Airtable-Queue.
 Jedes Reel wird zu Cloudinary hochgeladen und mit Postzeit eingetragen.
 Aufruf:  python batch_stage.py
+ACHTUNG: Welle #7-#28 wurde bereits gestagt - NICHT erneut ausfuehren (Duplikate)!
+Dient als VORLAGE fuer kuenftige Wellen. Plattform-Regel seit Auftrag 27:
+Video-Wellen standardmaessig platforms="instagram,tiktok,youtube" + yt_title/yt_description.
 """
 import sys, os, hashlib, time, json, requests
+from yt_meta import build_yt_meta
 sys.stdout.reconfigure(encoding="utf-8")
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -89,11 +93,10 @@ for rid, when in SCHEDULE.items():
             "reel_id": rid,
             "title": reel["title"],
             "video_url": url,
-            "platforms": "instagram",
+            "platforms": "instagram,tiktok,youtube",
             "caption_ig": reel["caption"],
             "caption_tiktok": reel["caption"],
-            "yt_title": reel["title"] + " #Shorts",
-            "yt_description": reel["caption"],
+            **dict(zip(("yt_title", "yt_description"), build_yt_meta(reel["title"], reel["caption"]))),
             "scheduled_time": when,
             "ai_label": bool(reel.get("ki_required")),
             "status": "scheduled",

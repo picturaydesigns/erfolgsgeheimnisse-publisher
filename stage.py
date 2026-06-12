@@ -16,6 +16,8 @@ import os
 import time
 import requests
 
+from yt_meta import build_yt_meta
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -52,7 +54,8 @@ def airtable_create(at, fields):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--reel", type=int, required=True, help="Reel-ID aus reels.json")
-    ap.add_argument("--platforms", default="instagram", help="komma-getrennt: instagram,tiktok,youtube")
+    ap.add_argument("--platforms", default="instagram,tiktok,youtube",
+                    help="komma-getrennt (Standard seit Auftrag 27: instagram,tiktok,youtube)")
     ap.add_argument("--when", default="", help='Postzeit "YYYY-MM-DD HH:mm" (leer = jetzt faellig)')
     args = ap.parse_args()
 
@@ -75,12 +78,16 @@ def main():
         "platforms": args.platforms,
         "caption_ig": reel["caption"],
         "caption_tiktok": reel["caption"],            # Phase 4: plattform-spezifisch kuerzen
-        "yt_title": f"{reel['title']} #Shorts",
-        "yt_description": reel["caption"],
+    }
+    yt_t, yt_d = build_yt_meta(reel["title"], reel["caption"],
+                               reel.get("yt_title", ""), reel.get("yt_description", ""))
+    fields.update({
+        "yt_title": yt_t,
+        "yt_description": yt_d,
         "scheduled_time": args.when,
         "ai_label": bool(reel.get("ki_required")),
         "status": "scheduled",
-    }
+    })
     rec = airtable_create(cfg["airtable"], fields)
     print(f"In Queue gestellt (Airtable {rec}). Kanaele: {args.platforms} | Zeit: {args.when or 'sofort faellig'}")
 

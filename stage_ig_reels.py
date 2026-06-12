@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 """Stellt die 7 neuen ruhigen IG-Reels (Hamsterrad-Flow, Stimme Victor) in die Publish-Queue.
 Slot 09:00 lokal = 07:00 UTC, 15.-21.06.2026 (fuellt den Morgen-Slot, der nach dem 14.06. leer laeuft).
-Nur Instagram (TikTok-Karusselle werden manuell hochgeladen). KI-Kennzeichnung in jeder Caption + ai_label."""
+KI-Kennzeichnung in jeder Caption + ai_label.
+ACHTUNG: Welle vom 15.-21.06. wurde bereits gestagt - NICHT erneut ausfuehren (Duplikate)!
+Dient als VORLAGE fuer kuenftige Reel-Wellen. Plattform-Regel seit Auftrag 27:
+Video-Wellen standardmaessig platforms="instagram,tiktok,youtube" + yt_title/yt_description."""
 import sys, os, hashlib, time, json, requests
+from yt_meta import build_yt_meta
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
 ST = r"C:\Users\Alexa\OneDrive\Desktop\Claude\erfolgsgeheimnisse\content\output\reels\strand-test"
@@ -59,8 +63,11 @@ for rid, title, fn, when, caption in JOBS:
     print(f"  #{rid} ({title}) -> Cloudinary...", end=" ", flush=True)
     try:
         url = cloudinary_upload(path, cfg["cloudinary"])
-        fields = {"reel_id": rid, "title": title, "video_url": url, "platforms": "instagram",
-                  "caption_ig": caption, "media_type": "reel",
+        yt_t, yt_d = build_yt_meta(title, caption)
+        fields = {"reel_id": rid, "title": title, "video_url": url,
+                  "platforms": "instagram,tiktok,youtube",
+                  "caption_ig": caption, "caption_tiktok": caption,
+                  "yt_title": yt_t, "yt_description": yt_d, "media_type": "reel",
                   "scheduled_time": when, "ai_label": True, "status": "scheduled"}
         rec = airtable_create(cfg["airtable"], fields)
         print(f"ok -> Queue ({when} UTC = 09:00) [{rec[:8]}]"); ok += 1

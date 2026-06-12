@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 """LOKAL ausfuehren. Stellt die fertige TikTok-Welle (Desktop\\TIKTOK-SCHEDULE\\01..12) in die
 Cloud-Queue: Medien zu Cloudinary (Karussell-Slides als Bilder, Videos als Video), je Stueck
-eine Airtable-Zeile mit platforms="tiktok". Der Cloud-Runner postet dann automatisch.
+eine Airtable-Zeile. Der Cloud-Runner postet dann automatisch.
+
+Plattform-Regel (seit Auftrag 27, YouTube-Regelbetrieb):
+  Videos    -> platforms="instagram,tiktok,youtube" + yt_title/yt_description (Hook-basiert)
+  Karussells-> platforms="tiktok" (YouTube nimmt keine Foto-Karussells)
+Optional pro Video-Ordner: YT-TITEL.txt / YT-BESCHREIBUNG.txt ueberschreiben die Automatik.
 
 Aufruf:
   python stage_tiktok_wave.py                          -> zeigt nur den Plan (Trockenlauf)
@@ -22,6 +27,8 @@ import sys
 import time
 
 import requests
+
+from yt_meta import build_yt_meta
 
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -77,7 +84,16 @@ def read_items():
                            if f.startswith("slide_") and f.endswith(".png"))
         else:
             media = [os.path.join(folder, "Video.mp4")]
-        items.append({"nr": nr, "typ": typ, "label": label, "media": media, "caption": caption})
+
+        def _opt(fname):
+            p = os.path.join(folder, fname)
+            if os.path.exists(p):
+                with open(p, encoding="utf-8") as fh:
+                    return fh.read().strip()
+            return ""
+
+        items.append({"nr": nr, "typ": typ, "label": label, "media": media, "caption": caption,
+                      "yt_title": _opt("YT-TITEL.txt"), "yt_description": _opt("YT-BESCHREIBUNG.txt")})
     return items
 
 
@@ -119,18 +135,24 @@ def main():
             fields = {
                 "reel_id": 200 + it["nr"],
                 "title": f"TikTok-Welle {it['nr']:02d} {it['label']}",
-                "platforms": "tiktok",
                 "caption_tiktok": it["caption"],
                 "scheduled_time": when,
                 "ai_label": True,
                 "status": "scheduled",
             }
             if it["typ"] == "Karussell":
+                fields["platforms"] = "tiktok"
                 fields["media_type"] = "carousel"
                 fields["image_urls"] = ",".join(urls)
             else:
+                yt_t, yt_d = build_yt_meta(it["label"], it["caption"],
+                                           it["yt_title"], it["yt_description"])
+                fields["platforms"] = "instagram,tiktok,youtube"
                 fields["media_type"] = "reel"
                 fields["video_url"] = urls[0]
+                fields["caption_ig"] = it["caption"]
+                fields["yt_title"] = yt_t
+                fields["yt_description"] = yt_d
             rec = airtable_create(cfg["airtable"], fields)
             staged[str(it["nr"])] = {"airtable": rec, "when": when}
             with open(LOG_PATH, "w", encoding="utf-8") as f:
