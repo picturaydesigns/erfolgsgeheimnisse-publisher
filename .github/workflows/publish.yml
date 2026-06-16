@@ -12,6 +12,12 @@ on:
     - cron: "4,24,44 6-21 * * *"
   workflow_dispatch: {}
 
+# Nur EIN Lauf gleichzeitig — verhindert, dass ueberlappende Cron-/Dispatch-Laeufe
+# denselben faelligen Eintrag doppelt posten (Ursache der Mehrfach-Posts 16.06.).
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
 jobs:
   publish:
     runs-on: ubuntu-latest
