@@ -32,6 +32,43 @@ AT_URL = f"https://api.airtable.com/v0/{AT_BASE}/{AT_TABLE}"
 AT_HEADERS = {"Authorization": f"Bearer {AT_TOKEN}", "Content-Type": "application/json"}
 
 
+MAX_PER_RUN = int(os.environ.get("MAX_PER_RUN", "1"))   # Anti-Blast: hoechstens N Posts pro Lauf
+
+
+def parse_when(when):
+    s = (when or "").strip().replace("T", " ").replace("Z", "").split(".")[0]
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"):
+        try:
+            return dt.datetime.strptime(s, fmt)
+        except ValueError:
+            continue
+    return None
+
+
+def posted_content_keys(days=10):
+    """Inhalte, die in den letzten <days> Tagen schon gepostet wurden -> Anti-Duplikat."""
+    cutoff = (dt.datetime.utcnow() - dt.timedelta(days=days)).strftime("%Y-%m-%d %H:%M")
+    keys, offset = set(), None
+    while True:
+        params = [("filterByFormula", "{status}='posted'"),
+                  ("fields[]", "video_url"), ("fields[]", "image_urls"),
+                  ("fields[]", "name"), ("fields[]", "posted_at")]
+        if offset:
+            params.append(("offset", offset))
+        j = requests.get(AT_URL, headers=AT_HEADERS, params=params, timeout=60).json()
+        for rec in j.get("records", []):
+            f = rec.get("fields", {})
+            if (f.get("posted_at") or "") < cutoff:
+                continue
+            k = (f.get("video_url") or f.get("image_urls") or f.get("name") or "").strip()
+            if k:
+                keys.add(k)
+        offset = j.get("offset")
+        if not offset:
+            break
+    return keys
+
+
 def due_records():
     """Alle scheduled-Eintraege holen; faellige (Zeit <= jetzt oder leer) in Python filtern."""
     now = dt.datetime.utcnow()
@@ -43,14 +80,15 @@ def due_records():
         j = requests.get(AT_URL, headers=AT_HEADERS, params=params, timeout=60).json()
         for rec in j.get("records", []):
             f = rec.get("fields", {})
-            when = f.get("scheduled_time", "").strip()
-            due = True
-            if when:
-                try:
-                    due = dt.datetime.strptime(when, "%Y-%m-%d %H:%M") <= now
-                except ValueError:
-                    due = True
-            if due:
+            when = (f.get("scheduled_time") or "").strip()
+            if not when:
+                out.append(rec)            # leeres Feld = sofort faellig
+                continue
+            t = parse_when(when)
+            if t is None:
+                print(f"  WARN: unlesbares scheduled_time '{when}' -> uebersprungen (postet NICHT)")
+                continue
+            if t <= now:
                 out.append(rec)
         offset = j.get("offset")
         if not offset:
@@ -158,8 +196,34 @@ def token_check():
 def main():
     token_check()
     recs = due_records()
-    print(f"{len(recs)} faellige Eintraege.")
+    posted_keys = posted_content_keys()      # Anti-Duplikat (letzte 10 Tage)
+    AUTHORS = {"confucius", "konfuzius", "benjamin franklin", "marcus aurelius", "epictetus",
+               "epiktet", "lao tzu", "laozi", "seneca", "socrates", "sokrates", "plato", "platon",
+               "aristotle", "aristoteles", "mark twain", "buddha", "rumi", "nietzsche", "goethe"}
+
+    def is_junk(f):
+        return (f.get("name") or "").strip().lower() in AUTHORS
+
+    def ckey(f):
+        return (f.get("video_url") or f.get("image_urls") or f.get("name") or "").strip()
+
+    eligible = []
     for rec in recs:
+        f = rec["fields"]
+        if is_junk(f):
+            print(f"  UEBERSPRUNGEN (Muell-Kachel): {f.get('name')}")
+            update(rec["id"], {"status": "skipped", "last_error": "Autoren-/Muell-Kachel"})
+            continue
+        if ckey(f) and ckey(f) in posted_keys:
+            print(f"  UEBERSPRUNGEN (Duplikat): {f.get('name')}")
+            update(rec["id"], {"status": "skipped", "last_error": "Duplikat (<10 Tage schon gepostet)"})
+            continue
+        eligible.append(rec)
+
+    eligible.sort(key=lambda r: r["fields"].get("scheduled_time") or "")
+    batch = eligible[:MAX_PER_RUN]
+    print(f"{len(recs)} faellig | {len(eligible)} nach Filter | poste {len(batch)} (Cap {MAX_PER_RUN})")
+    for rec in batch:
         post_one(rec)
 
 
