@@ -1,4 +1,18 @@
 {
  "_hinweis": "Publish-Queue als DATEI (ersetzt Airtable seit 20.07.2026 - Gratis-API-Limit). Stager haengen Eintraege an, poster.py (GitHub Actions) postet faellige und committet den Status zurueck. Zeiten in UTC.",
- "entries": []
+ "entries": [
+  {
+   "name": "HÖR AUF ZU WARTEN",
+   "typ": "reel",
+   "video_url": "https://res.cloudinary.com/drqzdu5xd/video/upload/v1784590264/er6p5qrmi1ne0zyhyoss.mp4",
+   "caption": "Hoer auf zu warten. 🖤\n\nDer perfekte Zeitpunkt ist eine Ausrede mit gutem Ruf.\n\n💬 Kommentier JETZT, wenn du aufhoerst zu warten.\n\n(KI-Stimme & -Bilder)\n#anfangen #mut #erfolgsgeheimnisse #motivationdeutsch",
+   "yt_title": "HÖR AUF ZU WARTEN",
+   "yt_description": "Hoer auf zu warten. 🖤\n\nDer perfekte Zeitpunkt ist eine Ausrede mit gutem Ruf.\n\n💬 Kommentier JETZT, wenn du aufhoerst zu warten.\n\n(KI-Stimme & -Bilder)\n#anfangen #mut #erfolgsgeheimnisse #motivationdeutsch",
+   "platforms": "instagram,tiktok,youtube",
+   "scheduled_time": "2026-07-20 17:00",
+   "status": "scheduled",
+   "ai_label": true,
+   "id": "q-20260720233106626793-H_R_AUF_ZU_WARTEN"
+  }
+ ]
 }
