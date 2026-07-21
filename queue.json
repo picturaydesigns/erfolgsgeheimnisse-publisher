@@ -63,9 +63,12 @@
    "caption": "Ein schlechter Tag wird nicht besser, weil du härter zu dir bist.\n\nWelcher Satz hilft dir gerade am meisten?\n\n#klarheit #mindset #selbstfürsorge #innererdialog #erfolgsgeheimnisse",
    "platforms": "instagram,tiktok",
    "scheduled_time": "2026-07-21 16:00",
-   "status": "scheduled",
+   "status": "failed",
    "ai_label": true,
-   "id": "q-20260721073820329255-K209_-_5_S_tze__die_ein_schlechter_Tag_n"
+   "id": "q-20260721073820329255-K209_-_5_S_tze__die_ein_schlechter_Tag_n",
+   "permalinks": "",
+   "last_error": "instagram:'video_url'; tiktok:'video_url'",
+   "posted_at": "2026-07-21 16:00"
   },
   {
    "name": "K210 - 4 Dinge, die du heute nicht entscheiden musst",
