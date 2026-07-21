@@ -3,6 +3,16 @@
 Fuer die 09:00-Morgen-Videos (Deep-Motivation). Nutzt dieselbe Cloudinary->Queue->poster.py-Kette
 wie die Abend-Reels. Zeiten in UTC (07:00 UTC = 09:00 lokal im Sommer)."""
 import sys, os, hashlib, time, json, requests
+
+# --- Startschutz (20.07.2026): Alt-Skript mit fest verdrahteten IDs/Terminen. ---
+# Lief beim blossen Aufruf sofort los. Aktueller Weg: stage_carousel.py / stage_reel.py.
+if "--wirklich-ausfuehren" not in sys.argv:
+    raise SystemExit(
+        "ALT-SKRIPT gestoppt: feste IDs/Termine + altes Feldschema. "
+        "Aktuell nutzen: stage_carousel.py --carousel <id> --when <UTC> "
+        "bzw. stage_reel.py. Erzwingen mit --wirklich-ausfuehren."
+    )
+
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
 
