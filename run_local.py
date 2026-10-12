@@ -3,7 +3,15 @@
 Liest die Secrets aus den Configs, setzt sie als Env-Variablen, ruft dann poster.main().
 Aufruf:  python run_local.py
 Kann auch per Windows-Aufgabenplaner zu festen Zeiten laufen (PC muss dann an sein)."""
-import json, os
+import json, os, sys, datetime
+
+# Laeuft unsichtbar per pythonw.exe (kein schwarzes Fenster mehr, Umbau 01.09.2026).
+# Damit nichts verloren geht, wandert alle Ausgabe in run_local.log:
+_log = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "run_local.log"),
+            "a", encoding="utf-8", buffering=1)
+_log.write("\n--- Lauf %s ---\n" % datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S"))
+sys.stdout = _log
+sys.stderr = _log
 
 ROOT = r"C:\Users\Alexa\OneDrive\Desktop\Claude\erfolgsgeheimnisse"
 ig = json.load(open(os.path.join(ROOT, "instagram_config.json"), encoding="utf-8-sig"))
